@@ -33,3 +33,8 @@ void generate_random_colors(GLfloat colors[], size_t size) {
         colors[3 * v + 2] = float(rand()) / float(RAND_MAX);
     }
 }
+
+std::string get_file_extension(std::string const &s) {
+    auto index = s.find_last_of('.');
+    return s.substr(index + 1);
+}

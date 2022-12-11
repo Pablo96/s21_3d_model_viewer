@@ -19,6 +19,13 @@ void generate_random_colors(GLfloat colors[], size_t size);
 std::string get_filename(std::string s);
 
 /**
+ * @brief Gets file extension without the dot from an absolute path
+ *
+ * @param s String (full path to the file)
+ */
+std::string get_file_extension(std::string const &s);
+
+/**
  * @brief Computes the Model View Projection
  *
  * @param zoom Field of View

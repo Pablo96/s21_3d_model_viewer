@@ -51,7 +51,7 @@ int main(void) {
     std::string path = "./models/pyramid.obj";
     size_t faces_count = 0;
     size_t vertices_count = 0;
-    load_obj(path.c_str(), vertices, faces_count, vertices_count);
+    load_model(path, vertices, faces_count, vertices_count);
 
     // Vertex buffer to load data into it in the main loop
     GLuint vertex_buffer;
@@ -63,6 +63,8 @@ int main(void) {
     // Color buffer to load colors
     GLuint color_buffer;
     glGenBuffers(1, &color_buffer);
+
+    glEnable(GL_PROGRAM_POINT_SIZE);
 
     while (!glfwWindowShouldClose(window)) {
         // Background color
@@ -120,6 +122,8 @@ int main(void) {
                 ImGui::RadioButton("GL_TRIANGLES", &draw_type, GL_TRIANGLES);
                 ImGui::SameLine();
                 ImGui::RadioButton("GL_LINE_STRIP", &draw_type, GL_LINE_STRIP);
+                ImGui::SameLine();
+                ImGui::RadioButton("GL_POINTS", &draw_type, GL_POINTS);
                 if (ImGui::Button("Reset"))
                     zoom = 45.0f;
                 ImGui::SameLine();
@@ -148,7 +152,7 @@ int main(void) {
                 faces_count = 0;
                 vertices_count = 0;
 
-                load_obj(path.c_str(), vertices, faces_count, vertices_count);
+                load_model(path.c_str(), vertices, faces_count, vertices_count);
 
                 delete[] color_buffer_data;
                 color_buffer_data = new GLfloat[vertices.size() * 3 * 3];
@@ -252,7 +256,7 @@ static inline void init_imgui(GLFWwindow *window) {
 static inline ImGui::FileBrowser init_filebrowser() {
     ImGui::FileBrowser fileDialog;
     fileDialog.SetTitle("Select a 3d model to view:");
-    fileDialog.SetTypeFilters({".obj"});
+    fileDialog.SetTypeFilters({".obj", ".model"});
     return fileDialog;
 }
 

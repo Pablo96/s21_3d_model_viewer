@@ -4,25 +4,22 @@ std::string get_filename(std::string s) {
     return s.substr(s.find_last_of("/") + 1);
 }
 
-glm::mat4 compute_mvp(float &zoom, float &rotateCamera, glm::vec3 &init_pos,
-                      float &y, float &z) {
+glm::mat4 compute_mvp(float const &fov, glm::vec3 const &camera_pos, float const &near, float const &far) {
     glm::mat4 Projection = glm::perspective(
-        glm::radians(zoom), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f,
-        100.0f);
-
-    glm::vec3 rotate(cos(rotateCamera) * 10.0 - init_pos.x, 0,
-                     sin(rotateCamera) * 10.0 - init_pos.z);
-
-    glm::vec3 position = init_pos + rotate;
+        glm::radians(fov),
+        (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT,
+         near, far
+    );
 
     glm::mat4 View =
-        glm::lookAt(position,            // Camera is at in World Space
+        glm::lookAt(camera_pos,            // Camera is at in World Space
                     glm::vec3(0, 0, 0),  // Camera looking at (origin)
                     glm::vec3(0, 1, 0)   // Head (0,-1,0 to look upside-down)
         );
 
-    glm::mat4 Model = glm::translate(glm::mat4(1.f), glm::vec3(0.0f, y, z));
-    glm::mat4 MVP = Projection * View * Model;
+    // Models are always centered
+    //glm::mat4 Model = glm::translate(glm::mat4(1.f), glm::vec3(0.0f, 0.0f, 0.0f));
+    glm::mat4 MVP = Projection * View /* * Model*/;
     return MVP;
 }
 

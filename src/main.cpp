@@ -33,11 +33,10 @@ int main(void) {
 
     // Imgui Defaults
     ImVec4 bg_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-    float zoom = 45.0f;
+    float fov = 45.0f;
     int draw_type = GL_TRIANGLES;
-    float rotateCamera = 0.0f;
     glm::vec3 init_pos(4, 3, 3);
-    float y = 0.0f, z = 0.0f;
+    float near = 0.1f, far = 100.0f;
 
     // Load shaders
     GLuint programID =
@@ -48,10 +47,13 @@ int main(void) {
 
     // Vertices for loading
     std::vector<glm::vec3> vertices;
-    std::string path = "./models/pyramid.obj";
+    std::string path = "/home/llama/Documents/PureParts/Parts/SWINGARM/SWINGARM_01_LOD1.model";
     size_t faces_count = 0;
     size_t vertices_count = 0;
-    load_model(path, vertices, faces_count, vertices_count);
+    size_t model_size = 0;
+    glm::vec3 model_center;
+    load_model(path, vertices, faces_count, vertices_count, model_size, model_center);
+    init_pos = glm::normalize(init_pos) * static_cast<float>(model_size) * 0.5f;
 
     // Vertex buffer to load data into it in the main loop
     GLuint vertex_buffer;
@@ -86,7 +88,7 @@ int main(void) {
                      &vertices[0], GL_STATIC_DRAW);
 
         // Projection & View
-        glm::mat4 MVP = compute_mvp(zoom, rotateCamera, init_pos, y, z);
+        glm::mat4 MVP = compute_mvp(fov, init_pos, model_center, near, far);
 
         // Send our transformation to the currently bound shader,
         glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
@@ -118,28 +120,33 @@ int main(void) {
                 ImGui::Text("Vertices: %zu", vertices_count);
                 ImGui::SameLine();
                 ImGui::Text("Edges: %zu", faces_count);
+                ImGui::SameLine();
+                ImGui::Text("ModelSize: %zu", model_size);
                 ImGui::ColorEdit4("Color", (float *)&bg_color);
                 ImGui::RadioButton("GL_TRIANGLES", &draw_type, GL_TRIANGLES);
                 ImGui::SameLine();
                 ImGui::RadioButton("GL_LINE_STRIP", &draw_type, GL_LINE_STRIP);
                 ImGui::SameLine();
                 ImGui::RadioButton("GL_POINTS", &draw_type, GL_POINTS);
-                if (ImGui::Button("Reset"))
-                    zoom = 45.0f;
+                if (ImGui::Button("Reset")) {
+                    init_pos.x = 4.0f;
+                    init_pos.y = 3.0f;
+                    init_pos.z = 3.0f;
+                }
                 ImGui::SameLine();
-                ImGui::SliderFloat("Zoom", &zoom, 69.0f, 4.20f);
-                if (ImGui::Button("Reset##Camera"))
-                    rotateCamera = 0.0f;
+                ImGui::DragFloat3("Camera Position", &init_pos[0], 0.1f, .0f, .0f, "%.2f");
+                if (ImGui::Button("Reset##Fov"))
+                    fov = 45.0f;
                 ImGui::SameLine();
-                ImGui::SliderFloat("Rotate", &rotateCamera, -5.0f, 5.0f);
-                if (ImGui::Button("Reset##UpDown"))
-                    y = 0.0f;
+                ImGui::SliderFloat("FOV", &fov, 4.20f, 120.0f);
+                if (ImGui::Button("Reset##Near"))
+                    near = 0.1f;
                 ImGui::SameLine();
-                ImGui::SliderFloat("Up/Down", &y, -5.0f, 5.0f);
-                if (ImGui::Button("Reset##LeftRight"))
-                    z = 0.0f;
+                ImGui::DragFloat("Near", &near, 0.1f, .0f, .0f, "%.2f");
+                if (ImGui::Button("Reset##Far"))
+                    far = 100.0f;
                 ImGui::SameLine();
-                ImGui::SliderFloat("Left/Right", &z, -5.0f, 5.0f);
+                ImGui::DragFloat("Far", &far, 0.1f, .0f, .0f, "%.2f");
             }
             ImGui::End();
 
@@ -152,7 +159,8 @@ int main(void) {
                 faces_count = 0;
                 vertices_count = 0;
 
-                load_model(path.c_str(), vertices, faces_count, vertices_count);
+                load_model(path.c_str(), vertices, faces_count, vertices_count, model_size, model_center);
+                init_pos = glm::normalize(init_pos) * static_cast<float>(model_size) * 0.5f;
 
                 delete[] color_buffer_data;
                 color_buffer_data = new GLfloat[vertices.size() * 3 * 3];

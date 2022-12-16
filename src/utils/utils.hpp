@@ -34,7 +34,6 @@ std::string get_file_extension(std::string const &s);
  * @param y Y of the translation vector
  * @param z X of the translation vector
  */
-glm::mat4 compute_mvp(float &zoom, float &rotateCamera, glm::vec3 &init_pos,
-                      float &y, float &z);
+glm::mat4 compute_mvp(float const &fov, glm::vec3 const &camera_pos, glm::vec3 const &camera_center, float const &near, float const &far);
 
 #endif  // UTILS_HPP_

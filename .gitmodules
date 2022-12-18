@@ -7,3 +7,6 @@
 [submodule "src/im3d"]
 	path = src/im3d
 	url = https://github.com/john-chapman/im3d.git
+[submodule "src/ImGuizmo"]
+	path = src/ImGuizmo
+	url = git@github.com:CedricGuillemet/ImGuizmo.git

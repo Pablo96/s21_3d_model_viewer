@@ -4,7 +4,7 @@ std::string get_filename(std::string s) {
     return s.substr(s.find_last_of("/") + 1);
 }
 
-glm::mat4 compute_mvp(float const &fov, glm::vec3 const &camera_pos, float const &near, float const &far) {
+glm::mat4 compute_mvp(float const &fov, glm::vec3 const &camera_pos, glm::vec3 const &camera_center, float const &near, float const &far) {
     glm::mat4 Projection = glm::perspective(
         glm::radians(fov),
         (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT,
@@ -13,8 +13,8 @@ glm::mat4 compute_mvp(float const &fov, glm::vec3 const &camera_pos, float const
 
     glm::mat4 View =
         glm::lookAt(camera_pos,            // Camera is at in World Space
-                    glm::vec3(0, 0, 0),  // Camera looking at (origin)
-                    glm::vec3(0, 1, 0)   // Head (0,-1,0 to look upside-down)
+                    camera_center,
+                    glm::vec3(0, 1, 0)      // Head (0,-1,0 to look upside-down)
         );
 
     // Models are always centered

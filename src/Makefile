@@ -2,18 +2,20 @@ EXE = 3d_model_viewer
 BUILD_DIR = ../build
 IMGUI_DIR = ./imgui
 IMGUI_FILEBROWSER_DIR = ./imgui-filebrowser
+IMGUI_GUIZMO_DIR = ./ImGuizmo
 DIRS = . ./utils/ ./shader/ ./loader/ ./includes/
 
 SOURCES = main.cpp
 SOURCES += $(IMGUI_DIR)/imgui.cpp $(IMGUI_DIR)/imgui_demo.cpp $(IMGUI_DIR)/imgui_draw.cpp $(IMGUI_DIR)/imgui_tables.cpp $(IMGUI_DIR)/imgui_widgets.cpp
 SOURCES += $(IMGUI_DIR)/backends/imgui_impl_glfw.cpp $(IMGUI_DIR)/backends/imgui_impl_opengl3.cpp
+SOURCES += $(IMGUI_GUIZMO_DIR)/ImGuizmo.cpp $(IMGUI_GUIZMO_DIR)/ImSequencer.cpp $(IMGUI_GUIZMO_DIR)/ImGradient.cpp $(IMGUI_GUIZMO_DIR)/ImCurveEdit.cpp $(IMGUI_GUIZMO_DIR)/ImGradient.cpp $(IMGUI_GUIZMO_DIR)/GraphEditor.cpp
 SOURCES += ./shader/shader.cpp
 SOURCES += ./loader/loader.cpp
 SOURCES += ./utils/utils.cpp
 
 OBJS = $(addsuffix .o, $(basename $(notdir $(SOURCES))))
 
-CXXFLAGS = -std=c++17 -pedantic -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends -I$(IMGUI_FILEBROWSER_DIR)  -I./includes
+CXXFLAGS = -std=c++17 -pedantic -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends -I$(IMGUI_FILEBROWSER_DIR) -I$(IMGUI_GUIZMO_DIR) -I./includes
 CXXFLAGS += -g -Wall -Wformat 
 CXXFLAGS += $(shell pkg-config --cflags glfw3 glew glm)
 LIBS = $(shell pkg-config --libs glfw3 glew glm) 
@@ -52,6 +54,9 @@ endif
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 %.o:$(IMGUI_DIR)/backends/%.cpp
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
+%.o:$(IMGUI_GUIZMO_DIR)/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 all: $(EXE)

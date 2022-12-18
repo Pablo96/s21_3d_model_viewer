@@ -12,8 +12,10 @@ static inline ImGui::FileBrowser init_filebrowser();
 static inline void framebuffer_size_callback(GLFWwindow *window, int width,
                                              int height);
 static inline void glfw_error_callback(int error, const char *description);
+static inline void calculate_camera_position(glm::vec3 &camera_position, float const distance_to_center, float const yaw_angle, float const pitch_angle);
 
-int main(void) {
+int main(void)
+{
     srand(time(0));
     init_glfw();
     GLFWwindow *window = create_window();
@@ -32,11 +34,11 @@ int main(void) {
     ImGui::FileBrowser fileDialog = init_filebrowser();
 
     // Imgui Defaults
-    ImVec4 bg_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-    float fov = 45.0f;
+    ImVec4 bg_color = ImVec4(0.29f, 0.29f, 0.29f, 1.00f);
     int draw_type = GL_TRIANGLES;
-    glm::vec3 init_pos(4, 3, 3);
-    float near = 0.1f, far = 100.0f;
+    float fov = 45.0f, near = 0.1f, far = 100.0f, view_distance = 0.f, yaw_camera_angle = 0.f, pitch_camera_angle = 90.f;
+    glm::vec3 camera_position;
+
 
     // Load shaders
     GLuint programID =
@@ -46,14 +48,18 @@ int main(void) {
     GLuint MatrixID = glGetUniformLocation(programID, "MVP");
 
     // Vertices for loading
-    std::vector<glm::vec3> vertices;
-    std::string path = "/home/llama/Documents/PureParts/Parts/SWINGARM/SWINGARM_01_LOD1.model";
+    #if 1
+    std::string path = "/home/llama/Documents/PureParts/Parts/SWINGARM/SWINGARM_03_LOD1.model";
+    #else
+    std::string path = "/home/llama/Documents/PureParts/Parts/SWINGARM/SWINGARM_01_LOD3.model";
+    #endif
     size_t faces_count = 0;
     size_t vertices_count = 0;
-    size_t model_size = 0;
+    float model_size = 0;
     glm::vec3 model_center;
+    std::vector<glm::vec3> vertices;
     load_model(path, vertices, faces_count, vertices_count, model_size, model_center);
-    init_pos = glm::normalize(init_pos) * static_cast<float>(model_size) * 0.5f;
+    view_distance = model_size * 1.5f;
 
     // Vertex buffer to load data into it in the main loop
     GLuint vertex_buffer;
@@ -88,7 +94,8 @@ int main(void) {
                      &vertices[0], GL_STATIC_DRAW);
 
         // Projection & View
-        glm::mat4 MVP = compute_mvp(fov, init_pos, model_center, near, far);
+        calculate_camera_position(camera_position, view_distance, yaw_camera_angle, pitch_camera_angle);
+        glm::mat4 MVP = compute_mvp(fov, camera_position + model_center, model_center, near, far);
 
         // Send our transformation to the currently bound shader,
         glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
@@ -121,20 +128,31 @@ int main(void) {
                 ImGui::SameLine();
                 ImGui::Text("Edges: %zu", faces_count);
                 ImGui::SameLine();
-                ImGui::Text("ModelSize: %zu", model_size);
+                ImGui::Text("ModelSize: %.2f", model_size);
                 ImGui::ColorEdit4("Color", (float *)&bg_color);
                 ImGui::RadioButton("GL_TRIANGLES", &draw_type, GL_TRIANGLES);
                 ImGui::SameLine();
                 ImGui::RadioButton("GL_LINE_STRIP", &draw_type, GL_LINE_STRIP);
                 ImGui::SameLine();
                 ImGui::RadioButton("GL_POINTS", &draw_type, GL_POINTS);
-                if (ImGui::Button("Reset")) {
-                    init_pos.x = 4.0f;
-                    init_pos.y = 3.0f;
-                    init_pos.z = 3.0f;
+                
+                if (ImGui::Button("Reset##ModelCenter")) {
+                    model_center.x = 0.0f;
+                    model_center.y = 0.0f;
+                    model_center.z = 0.0f;
                 }
                 ImGui::SameLine();
-                ImGui::DragFloat3("Camera Position", &init_pos[0], 0.1f, .0f, .0f, "%.2f");
+                ImGui::DragFloat3("Model Center", &model_center.x, 0.1f, .0f, .0f, "%.2f");
+
+                if (ImGui::Button("Reset View")) {
+                    yaw_camera_angle = 0.0f;
+                    pitch_camera_angle = 90.0f;
+                    view_distance = static_cast<float>(model_size) * 0.5f;
+                }
+                ImGui::DragFloat("yaw", &yaw_camera_angle, 0.1f, .0f, 360.0f, "%.2f", ImGuiSliderFlags_AlwaysClamp | ImGuiSliderFlags_NoRoundToFormat);
+                ImGui::DragFloat("pitch", &pitch_camera_angle, 0.1f, 0.01f, 179.99f, "%.2f", ImGuiSliderFlags_AlwaysClamp | ImGuiSliderFlags_NoRoundToFormat);
+                ImGui::DragFloat("distance", &view_distance, 0.1f, .01f, 10000.0f, "%.2f", ImGuiSliderFlags_AlwaysClamp | ImGuiSliderFlags_NoRoundToFormat);
+
                 if (ImGui::Button("Reset##Fov"))
                     fov = 45.0f;
                 ImGui::SameLine();
@@ -142,11 +160,11 @@ int main(void) {
                 if (ImGui::Button("Reset##Near"))
                     near = 0.1f;
                 ImGui::SameLine();
-                ImGui::DragFloat("Near", &near, 0.1f, .0f, .0f, "%.2f");
+                ImGui::DragFloat("Near", &near, 0.1f, .01f, 1000.0f, "%.2f");
                 if (ImGui::Button("Reset##Far"))
                     far = 100.0f;
                 ImGui::SameLine();
-                ImGui::DragFloat("Far", &far, 0.1f, .0f, .0f, "%.2f");
+                ImGui::DragFloat("Far", &far, 0.1f, 1.0f, 10000.0f, "%.2f");
             }
             ImGui::End();
 
@@ -160,7 +178,8 @@ int main(void) {
                 vertices_count = 0;
 
                 load_model(path.c_str(), vertices, faces_count, vertices_count, model_size, model_center);
-                init_pos = glm::normalize(init_pos) * static_cast<float>(model_size) * 0.5f;
+                view_distance = model_size * 1.5f;
+
 
                 delete[] color_buffer_data;
                 color_buffer_data = new GLfloat[vertices.size() * 3 * 3];
@@ -189,6 +208,14 @@ int main(void) {
 
     delete[] color_buffer_data;
     exit(EXIT_SUCCESS);
+}
+
+void calculate_camera_position(glm::vec3 &camera_position, float const distance_to_center, float const yaw_angle, float const pitch_angle) {
+    auto const theta = glm::radians(pitch_angle);
+    auto const phi = glm::radians(yaw_angle);
+    camera_position.x = distance_to_center * glm::cos(phi) * glm::sin(theta);
+    camera_position.z = distance_to_center * glm::sin(phi) * glm::sin(theta);
+    camera_position.y = distance_to_center * glm::cos(theta);
 }
 
 /**
@@ -294,6 +321,7 @@ static inline void imgui_preprocess() {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
+    ImGuizmo::BeginFrame();
 }
 
 /**

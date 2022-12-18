@@ -108,6 +108,7 @@ void load_obj(const char *filename, std::vector<glm::vec3> &vertices,
 
 typedef glm::u16vec3 hvec3;
 typedef glm::u16vec2 hvec2;
+// Vertices always start at address 8
 constexpr uint64_t VERTICES_OFFSET = 0x08;
 constexpr uint64_t FIRST_FACE = 0x1000200010000;
 constexpr uint64_t LOD3_END_FACE = 0x3000200010000;
@@ -134,6 +135,7 @@ static void load_pure_model_lod1(const char *filename, std::vector<glm::vec3> &v
         return;
     }
 
+    // The files start with a magic number 5
     uint32_t magic_number;
     READ_FILE(file, &magic_number, sizeof(uint32_t), 1, return);
     if (magic_number != 5) {
@@ -141,6 +143,7 @@ static void load_pure_model_lod1(const char *filename, std::vector<glm::vec3> &v
         return;
     }
 
+    // Then are followed by a weird number that changes per model
     uint32_t weird_header;
     READ_FILE(file, &weird_header, sizeof(uint32_t), 1, return);
 

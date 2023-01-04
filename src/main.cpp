@@ -14,8 +14,15 @@ static inline void framebuffer_size_callback(GLFWwindow *window, int width,
 static inline void glfw_error_callback(int error, const char *description);
 static inline void calculate_camera_position(glm::vec3 &camera_position, float const distance_to_center, float const yaw_angle, float const pitch_angle);
 
-int main(void)
+int main(int const argc, char **argv)
 {
+    printf("Args:\n");
+    for (int i = 0; i < argc; i++)
+    {
+        printf("\t%s\n", argv[i]);
+    }
+    printf("\n");
+
     srand(time(0));
     init_glfw();
     GLFWwindow *window = create_window();
